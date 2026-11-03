@@ -1,13 +1,59 @@
 # Spark Medallion Project
 
-Configurable Apache Spark medallion architecture demonstration for local Windows execution.
+A configurable Apache Spark project that demonstrates a medallion-style data pipeline and dashboard for local development.
 
-The batch pipeline reads CSV input into the **Bronze** layer, cleans and types it into **Silver**, and produces aggregated business metrics in **Gold**. All layers are persisted as Parquet.
+The batch pipeline reads event data from CSV, preserves the raw data in the **Bronze** layer, validates and types records in **Silver**, and produces daily business metrics in **Gold**. Each persisted layer is stored as Parquet.
 
-The included sample dataset is [data/raw/events.csv](data/raw/events.csv). It contains 1,000 deterministic January 2026 event records across purchase, refund, login, and view types. The dashboard uses manual refresh so long-running AI analysis is not interrupted.
+## Pipeline at a glance
 
-The ingestion path includes schema enforcement, validation and quarantine, date partitioning, audit and quality metadata, incremental checkpoints, and an optional Structured Streaming mode.
+```text
+CSV input → Bronze → Silver → Gold → Streamlit dashboard
+                         └────→ Quarantine
+```
 
-The dashboard supports Power BI-style product cross-filtering: click a product bar to update KPIs, trends, tables, and the AI analysis scope, then clear the filter to return to the full dataset.
+The sample dataset, [`data/raw/events.csv`](data/raw/events.csv), contains 1,000 deterministic January 2026 events, including purchases, refunds, logins, and views.
 
-See [HOWTORUN.md](HOWTORUN.md) for the exact setup and execution steps.
+## Features
+
+- Apache Spark batch processing using local client mode (`local[*]`).
+- Bronze, Silver, and Gold data layers, persisted as Parquet.
+- Schema enforcement, event validation, and quarantine for invalid records.
+- Date partitioning, run audit records, data-quality reports, and incremental checkpoints.
+- Optional Structured Streaming ingestion.
+- Streamlit dashboard with previews, charts, and product cross-filtering.
+- Optional local Ollama analysis when running with Docker Compose.
+
+## Quick start
+
+See **[HOWTORUN.md](HOWTORUN.md)** for complete prerequisites and setup instructions. In brief, the local Windows setup requires Python 3.11, Java 17, and Apache Spark 3.5.8 with Hadoop 3 support.
+
+After configuring `JAVA_HOME` and `SPARK_HOME`, use PowerShell:
+
+```powershell
+.\scripts\setup_windows.ps1
+.\.venv\Scripts\Activate.ps1
+.\scripts\run_pipeline.ps1
+streamlit run .\src\streamlit_app.py
+```
+
+Open <http://localhost:8501> to view the dashboard. Pipeline outputs are written under `data/bronze`, `data/silver`, and `data/gold`.
+
+### Docker Compose
+
+With Docker Desktop installed and running, start the services from the project directory:
+
+```powershell
+docker compose up --build
+```
+
+The dashboard is available at <http://localhost:8501>. The optional Ollama setup and streaming commands are documented in [HOWTORUN.md](HOWTORUN.md).
+
+## Documentation
+
+- [How to run](HOWTORUN.md) — prerequisites, setup, pipeline, dashboard, Docker, and streaming.
+- [Architecture](ARCHITECTURE.md) — runtime topology and data flow.
+- [Troubleshooting](TROUBLESHOOTING.md) — common setup and runtime issues.
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
