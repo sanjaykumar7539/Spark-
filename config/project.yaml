@@ -1,0 +1,96 @@
+project:
+  name: spark_medallion_project
+  description: Configurable Apache Spark medallion architecture demonstration - Local Windows
+  project_root: .
+
+runtime:
+  mode: local
+  operating_system: windows
+  spark_version: 3.5.8
+  scala_version: "2.12"
+  java_version: "17"
+  python_version: "3.11"
+
+spark_topology:
+  master_enabled: false
+  spark_client_enabled: true
+  worker_enabled: false
+  worker_count: 0
+  deploy_mode: client
+
+docker:
+  generate_dockerfile: true
+  generate_compose: true
+  use_pinned_images: true
+  restart_policy: unless-stopped
+
+local_runtime:
+  generate_setup_scripts: true
+  generate_venv_instructions: true
+  use_existing_spark_installation: false
+  spark_home_configurable: true
+
+data_pipeline:
+  bronze_enabled: true
+  silver_enabled: true
+  gold_enabled: true
+  storage_format: parquet
+  input_format: csv
+  sample_data_enabled: true
+  generate_sample_data_script: true
+  execution_type: batch
+  streaming_enabled: true
+  streaming_trigger: once
+  input_schema:
+    event_id: string
+    event_time: timestamp
+    user_id: string
+    product: string
+    event_type: string
+    amount: double
+  allowed_event_types:
+    - purchase
+    - refund
+    - login
+    - view
+  quarantine_invalid_records: true
+  partition_column: event_date
+  incremental_enabled: true
+  checkpoint_dir: data/checkpoints
+  audit_dir: data/audit
+  quality_dir: data/quality
+
+visualization:
+  streamlit_enabled: true
+  streamlit_charts_enabled: true
+  streamlit_pipeline_status_enabled: true
+  streamlit_layer_preview_enabled: true
+  streamlit_show_ollama_response: true
+  refresh_seconds: 0
+  streamlit_quality_metrics_enabled: true
+  streamlit_audit_enabled: true
+
+ai_integration:
+  ollama_enabled: true
+  send_gold_data_to_ollama: true
+  model: qwen2.5:3b
+  base_url: http://localhost:11434
+  interaction_mode: summary
+  max_rows: 3
+  request_timeout_seconds: 120
+
+outputs:
+  generate_readme: true
+  generate_howtorun: true
+  generate_architecture: true
+  generate_env_example: true
+  generate_gitignore: true
+  generate_requirements: true
+  generate_troubleshooting: true
+
+ports:
+  spark_master: 7077
+  spark_master_ui: 8080
+  spark_worker_ui_start: 8081
+  streamlit: 8501
+  ollama: 11434

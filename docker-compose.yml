@@ -1,0 +1,64 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spark-medallion:3.5.8
+    restart: "no"
+    environment:
+      PROJECT_ROOT: /app
+      SPARK_MASTER: local[*]
+    volumes:
+      - ./data:/app/data
+    command: >
+      sh -c "python src/generate_sample_data.py &&
+      python src/run_pipeline.py"
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spark-medallion:3.5.8
+    restart: unless-stopped
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_started
+    environment:
+      PROJECT_ROOT: /app
+      SPARK_MASTER: local[*]
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8501:8501"
+    command: >
+      streamlit run src/streamlit_app.py
+      --server.address=0.0.0.0
+      --server.port=8501
+
+  streaming:
+    profiles: ["streaming"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: spark-medallion:3.5.8
+    restart: "no"
+    environment:
+      PROJECT_ROOT: /app
+      SPARK_MASTER: local[*]
+    volumes:
+      - ./data:/app/data
+    command: python src/run_streaming.py
+
+  ollama:
+    image: ollama/ollama:0.12.6
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+
+volumes:
+  ollama_data:
